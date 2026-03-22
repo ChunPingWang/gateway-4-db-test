@@ -111,76 +111,80 @@ classDiagram
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Interactor as EmployeeInteractor
-    participant Gateway as EmployeeGateway
-    participant Impl as EmployeeGatewayImpl
-    participant Repo as EmployeeJpaRepository
-    participant DB as PostgreSQL
+    participant Interactor
+    participant Gateway
+    participant Impl
+    participant Repo
+    participant DB
 
-    Client->>Interactor: hireEmployee("Alice", 2023-01-15, "Engineering")
-    Interactor->>Interactor: new Employee("Alice", ...)
+    Client->>Interactor: hireEmployee(Alice, 2023-01-15, Engineering)
+    Interactor->>Interactor: new Employee(Alice, ...)
     Interactor->>Gateway: save(employee)
     Gateway->>Impl: save(employee)
     Impl->>Repo: save(employee)
-    Repo->>DB: INSERT INTO employees ...
-    DB-->>Repo: 回傳已儲存記錄
-    Repo-->>Impl: Employee(id=1, ...)
-    Impl-->>Gateway: Employee(id=1, ...)
-    Gateway-->>Interactor: Employee(id=1, ...)
-    Interactor-->>Client: Employee(id=1, ...)
+    Repo->>DB: INSERT INTO employees
+    DB-->>Repo: saved record
+    Repo-->>Impl: Employee id=1
+    Impl-->>Gateway: Employee id=1
+    Gateway-->>Interactor: Employee id=1
+    Interactor-->>Client: Employee id=1
 ```
+
+> **角色對應**：Client → 呼叫端 / Interactor → EmployeeInteractor / Gateway → EmployeeGateway / Impl → EmployeeGatewayImpl / Repo → EmployeeJpaRepository / DB → PostgreSQL
 
 ### 場景二：轉調部門（transferEmployee）
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Interactor as EmployeeInteractor
-    participant Gateway as EmployeeGateway
-    participant Impl as EmployeeGatewayImpl
-    participant Repo as EmployeeJpaRepository
-    participant DB as PostgreSQL
+    participant Interactor
+    participant Gateway
+    participant Impl
+    participant Repo
+    participant DB
 
-    Client->>Interactor: transferEmployee(1, "Management")
+    Client->>Interactor: transferEmployee(1, Management)
     Interactor->>Gateway: findById(1)
     Gateway->>Impl: findById(1)
     Impl->>Repo: findById(1)
-    Repo->>DB: SELECT ... WHERE id=1
-    DB-->>Repo: Employee(id=1, dept="Engineering")
-    Repo-->>Impl: Optional[Employee]
-    Impl-->>Gateway: Optional[Employee]
-    Gateway-->>Interactor: Optional[Employee]
-    Interactor->>Interactor: employee.setDepartment("Management")
+    Repo->>DB: SELECT WHERE id=1
+    DB-->>Repo: Employee id=1 dept=Engineering
+    Repo-->>Impl: Optional Employee
+    Impl-->>Gateway: Optional Employee
+    Gateway-->>Interactor: Optional Employee
+    Interactor->>Interactor: setDepartment(Management)
     Interactor->>Gateway: save(employee)
     Gateway->>Impl: save(employee)
     Impl->>Repo: save(employee)
-    Repo->>DB: UPDATE employees SET department='Management' WHERE id=1
-    DB-->>Repo: 更新完成
-    Repo-->>Impl: Employee(id=1, dept="Management")
-    Impl-->>Interactor: Employee(id=1, dept="Management")
-    Interactor-->>Client: Employee(id=1, dept="Management")
+    Repo->>DB: UPDATE department=Management WHERE id=1
+    DB-->>Repo: updated
+    Repo-->>Impl: Employee id=1 dept=Management
+    Impl-->>Interactor: Employee id=1 dept=Management
+    Interactor-->>Client: Employee id=1 dept=Management
 ```
 
 ### 場景三：單元測試時（Stub/Spy 取代 GatewayImpl）
 
 ```mermaid
 sequenceDiagram
-    participant Test as EmployeeInteractorTest
-    participant Interactor as EmployeeInteractor
-    participant StubSpy as EmployeeGatewayStubSpy
-    participant Memory as HashMap（記憶體）
+    participant Test
+    participant Interactor
+    participant StubSpy
+    participant Memory
 
-    Note over Test,Memory: 不需要資料庫！速度極快
+    Note over Test,Memory: No database needed - very fast
 
-    Test->>Interactor: hireEmployee("Alice", ...)
+    Test->>Interactor: hireEmployee(Alice, ...)
     Interactor->>StubSpy: save(employee)
     StubSpy->>StubSpy: saveCallCount++
     StubSpy->>Memory: store.put(id, employee)
-    Memory-->>StubSpy: 儲存完成
-    StubSpy-->>Interactor: Employee(id=1, ...)
-    Interactor-->>Test: Employee(id=1, ...)
-    Test->>Test: assert saveCallCount == 1（Spy 驗證）
+    Memory-->>StubSpy: stored
+    StubSpy-->>Interactor: Employee id=1
+    Interactor-->>Test: Employee id=1
+    Test->>Test: assert saveCallCount == 1
 ```
+
+> **角色對應**：Test → EmployeeInteractorTest / Interactor → EmployeeInteractor / StubSpy → EmployeeGatewayStubSpy / Memory → HashMap（記憶體內儲存，取代真實資料庫）
 
 ---
 
